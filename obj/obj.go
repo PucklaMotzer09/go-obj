@@ -29,7 +29,12 @@ func parseElement(t []string) []int32 {
 		f := strings.Split(t[i], "/")
 		// for now, just grab the vertex index
 		x, _ := strconv.ParseInt(f[0], 10, 32)
-		e[i] = int32(x) - 1
+		e[i] = int32(x) - 1 // convert to 0-indexing
+	}
+
+	// convert quads to triangles
+	if len(t) > 3 {
+		e = append(e, e[0], e[2])
 	}
 
 	return e
@@ -40,6 +45,7 @@ func Parse(filename string) ([]float32, []int32) {
 	scanner := bufio.NewScanner(fp)
 
 	vertices := []float32{}
+	normals := []float32{}
 	elements := []int32{}
 
 	for scanner.Scan() {
@@ -48,6 +54,8 @@ func Parse(filename string) ([]float32, []int32) {
 		switch toks[0] {
 		case "v":
 			vertices = append(vertices, parseVertex(toks[1:])...)
+		case "vn":
+			normals = append(normals, parseVertex(toks[1:])...)
 		case "f":
 			elements = append(elements, parseElement(toks[1:])...)
 		}
