@@ -22,14 +22,20 @@ func parseVertex(t []string) []float32 {
 // Parse an element string, a list of whitespace-separated elements.
 // Elements are of the form "<vi>/<ti>/<ni>" where indices are the
 // vertex, texture coordinate and normal, respectively.
-func parseElement(t []string) []int32 {
-	e := make([]int32, len(t))
+func parseElement(t []string) [][3]int32 {
+	e := make([][3]int32, len(t))
 
 	for i := 0; i < len(t); i++ {
 		f := strings.Split(t[i], "/")
-		// for now, just grab the vertex index
-		x, _ := strconv.ParseInt(f[0], 10, 32)
-		e[i] = int32(x) - 1 // convert to 0-indexing
+
+		for j := 0; j < len(f); j++ {
+			// for now, just grab the vertex index
+			if x, err := strconv.ParseInt(f[j], 10, 32); err == nil {
+				e[i][j] = int32(x) - 1 // convert to 0-indexing
+			} else {
+				e[i][j] = -1
+			}
+		}
 	}
 
 	// convert quads to triangles
@@ -40,26 +46,38 @@ func parseElement(t []string) []int32 {
 	return e
 }
 
-func Parse(filename string) ([]float32, []int32) {
+func Parse(filename string) ([]float32, []float32) {
 	fp, _ := os.Open(filename)
 	scanner := bufio.NewScanner(fp)
 
-	vertices := []float32{}
-	normals := []float32{}
-	elements := []int32{}
+	vertices := [][]float32{}
+	normals := [][]float32{}
+	elements := [][3]int32{}
+
+	vertOut := []float32{}
+	normOut := []float32{}
 
 	for scanner.Scan() {
 		toks := strings.Fields(strings.TrimSpace(scanner.Text()))
 
 		switch toks[0] {
 		case "v":
-			vertices = append(vertices, parseVertex(toks[1:])...)
+			vertices = append(vertices, parseVertex(toks[1:]))
 		case "vn":
-			normals = append(normals, parseVertex(toks[1:])...)
+			normals = append(normals, parseVertex(toks[1:]))
 		case "f":
 			elements = append(elements, parseElement(toks[1:])...)
 		}
 	}
 
-	return vertices, elements
+	for _, e := range elements {
+		if e[0] >= 0 {
+			vertOut = append(vertOut, vertices[e[0]]...)
+		}
+		if e[2] >= 0 {
+			normOut = append(normOut, normals[e[2]]...)
+		}
+	}
+
+	return vertOut, normOut
 }
