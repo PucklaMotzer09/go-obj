@@ -4,6 +4,7 @@ package obj
 
 import (
 	"bufio"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -48,7 +49,11 @@ func parseElement(t []string) [][3]int32 {
 
 func Parse(filename string) ([]float32, []float32) {
 	fp, _ := os.Open(filename)
-	scanner := bufio.NewScanner(fp)
+	return ParseReader(fp)
+}
+
+func ParseReader(reader io.Reader) ([]float32, []float32) {
+	scanner := bufio.NewScanner(reader)
 
 	vertices := [][]float32{}
 	normals := [][]float32{}
