@@ -47,12 +47,15 @@ func parseElement(t []string) [][3]int32 {
 	return e
 }
 
-func Parse(filename string) ([]float32, []float32) {
-	fp, _ := os.Open(filename)
+func Parse(filename string) ([]float32, []float32, error) {
+	fp, err := os.Open(filename)
+	if err != nil {
+		return nil, nil, err
+	}
 	return ParseReader(fp)
 }
 
-func ParseReader(reader io.Reader) ([]float32, []float32) {
+func ParseReader(reader io.Reader) ([]float32, []float32, error) {
 	scanner := bufio.NewScanner(reader)
 
 	vertices := [][]float32{}
@@ -63,6 +66,9 @@ func ParseReader(reader io.Reader) ([]float32, []float32) {
 	normOut := []float32{}
 
 	for scanner.Scan() {
+		if err := scanner.Err(); err != nil {
+			return nil, nil, err
+		}
 		toks := strings.Fields(strings.TrimSpace(scanner.Text()))
 
 		switch toks[0] {
@@ -84,5 +90,5 @@ func ParseReader(reader io.Reader) ([]float32, []float32) {
 		}
 	}
 
-	return vertOut, normOut
+	return vertOut, normOut, nil
 }
